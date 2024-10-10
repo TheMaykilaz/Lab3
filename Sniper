@@ -1,0 +1,28 @@
+package droids;
+
+import java.util.Random;
+
+public class DroidSniper extends Droid {
+    private boolean canOneShot;
+
+    public DroidSniper(String name) {
+        super(name, 80, 40, 0.7); // Початкове здоров'я і шкода снайпера
+        this.canOneShot = false;
+    }
+
+    @Override
+    public void useAbility(Droid target) {
+        Random random = new Random();
+        if (random.nextDouble() < 0.2) { // 20% шанс на ваншот
+            System.out.println(getName() + " використовує здібність ваншот і миттєво вбиває " + target.getName());
+            target.takeDamage(target.getHealth()); // Забирає все здоров'я у цілі
+        } else {
+            System.out.println(getName() + " намагається ваншотнути " + target.getName() + ", але не вдається.");
+        }
+    }
+    @Override
+    public String toString() {
+        return "Снайер  - Ім'я: " + getName() + ", Здоров'я: " + getHealth() +
+                ", Урон: " + getDamage() + ", Точність: " + getAccuracy();
+    }
+}
