@@ -1,0 +1,66 @@
+package droids;
+import java.util.Random;
+
+public class Droid {
+    protected String name;
+    protected int health;
+    protected int damage;
+    protected double accuracy;
+
+    public Droid(String name, int health, int damage, double accuracy) {
+        this.name = name;
+        this.health = health;
+        this.damage = damage;
+        this.accuracy = accuracy;
+    }
+
+    public String getName() {
+
+        return name;
+    }
+
+    public int getHealth() {
+        return health;
+    }
+    public double getAccuracy() {
+
+        return accuracy;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
+    public void takeDamage(int amount) {
+        health -= amount;
+        if (health < 0) {
+            health = 0;
+        }
+        System.out.println(name + " отримав " + amount + " шкоди. Здоров'я: " + health);
+    }
+
+    public void heal(int amount) {
+        health += amount;
+        System.out.println(name + " відновив " + amount + " здоров'я. Здоров'я: " + health);
+    }
+
+    public boolean isAlive() {
+        return health > 0;
+    }
+
+    public void attack(Droid target) {
+        Random random = new Random();
+        double hitChance = random.nextDouble();
+
+        if (hitChance <= accuracy) {
+            System.out.println(name + " влучає по " + target.getName() + " і завдає " + damage + " шкоди.");
+            target.takeDamage(damage);
+        } else {
+            System.out.println(name + " промахується і не завдає шкоди.");
+        }
+
+    }
+
+    public  void useAbility(Droid target){
+
+    }
+}
