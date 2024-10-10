@@ -1,0 +1,27 @@
+package droids;
+
+import java.util.Random;
+
+public class DroidEngineer extends Droid {
+    public DroidEngineer(String name) {
+        super(name, 85, 5, 0.9);
+    }
+
+    @Override
+    public void useAbility(Droid target) {
+        Random random = new Random();
+        int healingAmount = random.nextInt(31) + 10; // Випадкове число від 10 до 40
+        if (target.isAlive()) {
+            target.heal(healingAmount);
+            System.out.println(name + " лікує " + target.getName() + " на " + healingAmount + " HP.");
+        } else {
+            System.out.println(target.getName() + " не може бути вилікуваний, бо мертвий.");
+        }
+    }
+    @Override
+    public String toString() {
+        return "Інженер  - Ім'я: " + getName() + ", Здоров'я: " + getHealth() +
+                ", Урон: " + getDamage() + ", Точність: " + getAccuracy();
+    }
+}
+
