@@ -1,0 +1,26 @@
+package droids;
+
+import java.util.Random;
+
+public class DroidSpeznaz extends Droid {
+    public DroidSpeznaz(String name) {
+        super(name, 120, 30, 0.4);
+    }
+
+    @Override
+    public void useAbility(Droid target) {
+        Random random = new Random();
+        int damageAmount = random.nextInt(21) + 10; // Випадкове число від 10 до 30
+        if (target.isAlive()) {
+            target.takeDamage(damageAmount);
+            System.out.println(name + " завдає " + damageAmount + " шкоди " + target.getName() + " за допомогою здібності.");
+        } else {
+            System.out.println(target.getName() + " вже мертвий, не можна атакувати.");
+        }
+    }
+    @Override
+    public String toString() {
+        return "Спецназ  - Ім'я: " + getName() + ", Здоров'я: " + getHealth() +
+                ", Урон: " + getDamage() + ", Точність: " + getAccuracy();
+    }
+}
