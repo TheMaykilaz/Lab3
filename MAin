@@ -1,0 +1,224 @@
+package main;
+
+import battle.Battle;
+import droids.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        List<Droid> allDroids = new ArrayList<>();
+
+        while (true) {
+            System.out.println("""
+                    Меню:
+                    1 -> Створити дроїда
+                    2 -> Показати список дроїдів
+                    3 -> Запустити бій 1 на 1
+                    4 -> Запустити командний бій
+                    5 -> Записати результат битви
+                    6 -> Прочитати файл
+                    7 -> Вийти""");
+
+            int choice = scanner.nextInt();
+            switch (choice) {
+                case 1 -> createDroid(scanner, allDroids);
+                case 2 -> showDroids(allDroids);
+                case 3 -> startOneOnOneBattle(scanner, allDroids);
+                case 4 -> startTeamBattle(scanner, allDroids);
+                case 5 -> {
+                    System.out.print("Введіть ім'я файлу для збереження результатів: ");
+                    String fileName = scanner.next();
+                    Battle.saveBattleResult(fileName); // Зберегти результати бою у файл
+                }
+                case 6 -> {
+                    System.out.print("Введіть ім'я файлу для відкриття: ");
+                    String fileName = scanner.next();
+                    Battle.readBattleResult(fileName); // Відкрити файл з результатами битви
+                }
+                case 7 -> System.exit(0);
+                default -> System.out.println("Неправильний вибір!");
+            }
+        }
+    }
+
+    public static void createDroid(Scanner scanner, List<Droid> allDroids) {
+        System.out.println("""
+                Виберіть тип дроїда:
+                1 -> Sniper
+                2 -> Engineer
+                3 -> Tank
+                4 -> Speznaz""");
+
+        int type = scanner.nextInt();
+        System.out.print("Введіть ім'я дроїда: ");
+        String name = scanner.next();
+
+        Droid droid = switch (type) {
+            case 1 -> new DroidSniper(name);
+            case 2 -> new DroidEngineer(name);
+            case 3 -> new DroidTank(name);
+            case 4 -> new DroidSpeznaz(name);
+            default -> null;
+        };
+
+        if (droid != null) {
+            allDroids.add(droid);
+            System.out.println("Дроїд створений: " + droid.getName());
+        } else {
+            System.out.println("Неправильний тип дроїда.");
+        }
+    }
+
+    public static void showDroids(List<Droid> allDroids) {
+        for (int i = 0; i < allDroids.size(); i++) {
+            System.out.println((i + 1) + ". " + allDroids.get(i).toString());
+        }
+    }
+    //Tostring Override (кожен типу)
+
+    public static void startOneOnOneBattle(Scanner scanner, List<Droid> allDroids) {
+        if (allDroids.size() < 2) {
+            System.out.println("Необхідно принаймні два дроїда для бою один на один.");
+            return;
+        }
+
+        System.out.println("Виберіть дроїда для першої команди:");
+        Droid firstDroid = chooseDroid(scanner, allDroids); // Вибір першого дроїда
+
+        System.out.println("Виберіть дроїда для другої команди:");
+        Droid secondDroid = chooseDroid(scanner, allDroids); // Вибір другого дроїда
+
+        if (firstDroid == null || secondDroid == null || firstDroid == secondDroid) {
+            System.out.println("Неправильний вибір дроїдів. Бій не може бути проведений.");
+            return;
+        }
+
+        System.out.println("Бій починається між " + firstDroid.getName() + " та " + secondDroid.getName());
+
+        StringBuilder battleLog = new StringBuilder(); // Лог бою
+
+        while (firstDroid.isAlive() && secondDroid.isAlive()) {
+            // Атака першого дроїда
+            List<Droid> enemy = List.of(secondDroid);
+            List<Droid> ally = List.of(firstDroid);
+            Battle.attackTurn(firstDroid, enemy, ally, scanner);
+            battleLog.append(firstDroid.getName()).append(" атакує ").append(secondDroid.getName()).append("\n");
+
+            if (!secondDroid.isAlive()) break;
+
+            // Атака другого дроїда
+            enemy = List.of(firstDroid);
+            ally = List.of(secondDroid);
+            Battle.attackTurn(secondDroid, enemy, ally, scanner);
+            battleLog.append(secondDroid.getName()).append(" атакує ").append(firstDroid.getName()).append("\n");
+        }
+
+        if (firstDroid.isAlive()) {
+            System.out.println(firstDroid.getName() + " переміг!");
+            battleLog.append(firstDroid.getName()).append(" переміг!\n");
+        } else {
+            System.out.println(secondDroid.getName() + " переміг!");
+            battleLog.append(secondDroid.getName()).append(" переміг!\n");
+        }
+
+        Battle.logBattle(battleLog.toString()); // Зберігаємо лог бою
+    }
+
+
+    public static void startTeamBattle(Scanner scanner, List<Droid> allDroids) {
+        System.out.println("Сформуйте команди для командного бою.");
+
+        System.out.println("Виберіть першу команду:");
+        List<Droid> team1 = selectTeam(scanner, allDroids, null);
+        System.out.println("Виберіть другу команду:");
+        List<Droid> team2 = selectTeam(scanner, allDroids, team1);
+
+        StringBuilder battleLog = new StringBuilder(); // Лог бою
+
+        while (team1.stream().anyMatch(Droid::isAlive) && team2.stream().anyMatch(Droid::isAlive)) {
+            // Хід першої команди
+            for (Droid droid : team1) {
+                if (droid.isAlive()) {
+                    List<Droid> aliveEnemies = filterAliveDroids(team2); // Вороги
+                    List<Droid> aliveAllies = filterAliveDroids(team1);  // Союзники
+                    if (!aliveEnemies.isEmpty()) {
+                        Battle.attackTurn(droid, aliveEnemies, aliveAllies, scanner);
+                        battleLog.append(droid.getName()).append(" атакує ").append(aliveEnemies.get(0).getName()).append("\n");
+                    }
+                }
+            }
+
+            // Хід другої команди
+            for (Droid droid : team2) {
+                if (droid.isAlive()) {
+                    List<Droid> aliveEnemies = filterAliveDroids(team1); // Вороги
+                    List<Droid> aliveAllies = filterAliveDroids(team2);  // Союзники
+                    if (!aliveEnemies.isEmpty()) {
+                        Battle.attackTurn(droid, aliveEnemies, aliveAllies, scanner);
+                        battleLog.append(droid.getName()).append(" атакує ").append(aliveEnemies.get(0).getName()).append("\n");
+                    }
+                }
+            }
+        }
+
+        // Перевірка переможця
+        if (team1.stream().anyMatch(Droid::isAlive) && !team2.stream().anyMatch(Droid::isAlive)) {
+            System.out.println("Team 1 виграв!");
+            battleLog.append("Team 1 виграв!\n");
+        } else if (team2.stream().anyMatch(Droid::isAlive) && !team1.stream().anyMatch(Droid::isAlive)) {
+            System.out.println("Team 2 виграв!");
+            battleLog.append("Team 2 виграв!\n");
+        } else {
+            System.out.println("Нічия! Обидві команди знищені.");
+            battleLog.append("Нічия! Обидві команди знищені.\n");
+        }
+
+        Battle.logBattle(battleLog.toString()); // Зберігаємо лог бою
+    }
+
+    // Метод для фільтрації тільки живих дроїдів
+    private static List<Droid> filterAliveDroids(List<Droid> droids) {
+        List<Droid> aliveDroids = new ArrayList<>();
+        for (Droid droid : droids) {
+            if (droid.isAlive()) {
+                aliveDroids.add(droid);
+            }
+        }
+        return aliveDroids;
+    }
+
+    public static Droid chooseDroid(Scanner scanner, List<Droid> allDroids) {
+        System.out.println("Доступні дроїди:");
+        showDroids(allDroids);
+        System.out.print("Виберіть номер дроїда: ");
+        int index = scanner.nextInt() - 1;
+
+        if (index >= 0 && index < allDroids.size() && allDroids.get(index).isAlive()) {
+            return allDroids.get(index);
+        } else {
+            System.out.println("Неправильний вибір.");
+            return null;
+        }
+    }
+
+
+    public static List<Droid> selectTeam(Scanner scanner, List<Droid> allDroids, List<Droid> excludedTeam) {
+        List<Droid> selectedTeam = new ArrayList<>();
+        int teamSize = 3;
+
+        while (selectedTeam.size() < teamSize) {
+            Droid chosenDroid = chooseDroid(scanner, allDroids);
+            if (chosenDroid != null && !selectedTeam.contains(chosenDroid) && (excludedTeam == null || !excludedTeam.contains(chosenDroid))) {
+                selectedTeam.add(chosenDroid);
+            } else {
+                System.out.println("Цей дроїд вже обрано або не доступний.");
+            }
+        }
+        return selectedTeam;
+    }
+}
