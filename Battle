@@ -1,0 +1,102 @@
+package battle;
+
+import droids.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.BufferedWriter;
+import java.util.ArrayList;
+
+
+public class Battle {
+
+
+    public static void attackTurn(Droid attacker, List<Droid> enemies, List<Droid> allies, Scanner scanner) {
+
+        logBattle(attacker.getName() + ", твій хід.");
+        System.out.println("1 -> Атакувати");
+        System.out.println("2 -> Використати здібність");
+
+        int choice;
+        do {
+            System.out.print("Виберіть дію (1 або 2): ");
+            choice = scanner.nextInt();
+        } while (choice != 1 && choice != 2);
+
+        if (choice == 1) {
+            Droid target = chooseTarget(enemies, scanner); // Вибір цілі для атаки з ворогів
+            attacker.attack(target);
+        } else if (choice == 2) {
+            if (attacker instanceof DroidSniper || attacker instanceof DroidSpeznaz) {
+                Droid target = chooseTarget(enemies, scanner); // Вибір цілі для здібності з ворогів
+                attacker.useAbility(target);
+            } else {
+                Droid target = chooseTarget(allies, scanner); // Для інженера і танка здібність на союзників
+                attacker.useAbility(target);
+            }
+        }
+    }
+
+
+    private static Droid chooseTarget(List<Droid> targets, Scanner scanner) {
+        System.out.println("Виберіть ціль:");
+        for (int i = 0; i < targets.size(); i++) {
+            logBattle((i + 1) + ": " + targets.get(i).getName() + " (Здоров'я: " + targets.get(i).getHealth() + ")");
+        }
+
+        int targetIndex;
+        do {
+            System.out.print("Введіть номер цілі: ");
+            targetIndex = scanner.nextInt() - 1;
+        } while (targetIndex < 0 || targetIndex >= targets.size() || !targets.get(targetIndex).isAlive());
+
+        return targets.get(targetIndex);
+    }
+
+    private static List<String> battleLogs = new ArrayList<>();
+
+    // Метод для додавання повідомлень до логу бою
+    public static void logBattle(String message) {
+        System.out.println(message); // Виводимо повідомлення в консоль
+        battleLogs.add(message);     // Зберігаємо повідомлення в лог бою
+    }
+
+    // Отримуємо всі повідомлення з логу бою
+    public static List<String> getBattleLogs() {
+        return battleLogs;
+    }
+
+    // Очищаємо лог бою після завершення та збереження
+    public static void clearBattleLogs() {
+        battleLogs.clear();
+    }
+
+    public static void saveBattleResult(String fileName) {
+        List<String> battleLogs = getBattleLogs(); // Отримуємо всі лог-повідомлення
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            for (String log : battleLogs) {
+                writer.write(log);
+                writer.newLine(); // Додаємо новий рядок
+            }
+            System.out.println("Результати бою збережено у файлі: " + fileName);
+        } catch (IOException e) {
+            System.out.println("Виникла помилка при запису у файл: " + e.getMessage());
+        }
+    }
+
+
+    public static void readBattleResult(String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            System.out.println("Battle Result:");
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Виникла помилка при читанні файлу: " + e.getMessage());
+        }
+    }
+}
