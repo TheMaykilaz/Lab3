@@ -1,0 +1,28 @@
+package droids;
+
+public class DroidTank extends Droid {
+    public DroidTank(String name) {
+        super(name, 150, 10, 0.8);
+    }
+
+    @Override
+    public void useAbility(Droid target) {
+        // Лікуємо союзника
+        if (target.isAlive()) {
+            int healingAmount = 30; // Кількість лікування
+            target.heal(healingAmount);
+            int damageTaken = healingAmount / 2; // Танкові приймає половину від лікування
+            this.takeDamage(damageTaken);
+            System.out.println(name + " лікує " + target.getName() + " на " + healingAmount +
+                    " HP і отримує " + damageTaken + " HP урону.");
+        } else {
+            System.out.println(target.getName() + " не може бути вилікуваний, бо мертвий.");
+        }
+    }
+    @Override
+    public String toString() {
+        return "Танк  - Ім'я: " + getName() + ", Здоров'я: " + getHealth() +
+                ", Урон: " + getDamage() + ", Точність: " + getAccuracy();
+    }
+
+}
